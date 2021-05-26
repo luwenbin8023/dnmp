@@ -8,3 +8,5 @@
 /mysql57/ibtmp1
 /log/nginx/access.log
 /log/nginx/error.log
+/mysql57/ib_buffer_pool
+/redis/dump.rdb
