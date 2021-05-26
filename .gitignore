@@ -1,1 +1,10 @@
 /.idea/
+/mysql57/ib_logfile0
+/mysql57/ib_logfile1
+/mysql57/ibdata1
+/mysql56/ib_logfile0
+/mysql56/ib_logfile1
+/mysql56/ibdata1
+/mysql57/ibtmp1
+/log/nginx/access.log
+/log/nginx/error.log
