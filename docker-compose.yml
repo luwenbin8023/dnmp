@@ -2,6 +2,7 @@ version: '2'
 services:
   nginx:
      pid: "host"
+     container_name: nginx #docker镜像名称
      restart: always #设置自启动
      #build: ./nginx #构建docker的Dockerfile目录
      image: luwenbin8023/nginx:1.8.1-alpine #本地镜像
@@ -9,18 +10,16 @@ services:
        - "80"
      ports:
        - "80:80" #宿主端口（映射到）-》docker镜像端口
-       - "8020:8020" #宿主端口（映射到）-》docker镜像端口
-       - "8030:8030" #宿主端口（映射到）-》docker镜像端口
        - "443:443" #宿主端口（映射到）-》docker镜像端口
-       - "85:85" #宿主端口（映射到）-》docker镜像端口
      volumes:
-       - ./nginx/nginx.conf:/etc/nginx/nginx.conf #nginx配置
-       - ./nginx/fastcgi_params:/etc/nginx/fastcgi_params #fastcgi配置
-       - ./nginx/sites-enabled:/etc/nginx/sites-enabled #站点配置
+       - ../www:/data/www:rw #站点根目录
+       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro #nginx配置
+       - ./nginx/sites-enabled:/etc/nginx/sites-enabled:rw #站点配置
+       - ./nginx/fastcgi_params:/etc/nginx/fastcgi_params:ro #fastcgi配置
+       #- ./nginx/fastcgi-php.conf::/etc/nginx/fastcgi-php.conf:ro
        - ./nginx/certs:/etc/nginx/certs #ssl证书
        - ./nginx/logrotate.d:/etc/logrotate.d/ # 日志分割配置
-       - ../www:/data/www #站点根目录
-       - ./log/nginx:/data/log #nginx log目录
+       - ./log/nginx:/data/log:rw #nginx log目录
      links:
        - "php56"  #连接其他docker镜像
        - "php72"
@@ -28,22 +27,21 @@ services:
        - "mysql56"
        - "mysql57"
        - "redis"
-     external_links:
-       - "graylog"
-     container_name: nginx #docker镜像名称
+#     external_links:
+#       - "graylog"
      privileged: true #设定读写权限
   php56:
+      container_name: php56
       restart: always #设置自启动
       image: luwenbin8023/php:5.6-fpm-alpine3.8 #本地镜像
       volumes:
         - ../www:/data/www #站点根目录
-        ##- ./php:/opt/config #配置文件
+        #- /php56/php.ini:/usr/local/etc/php/php.ini:ro
         - ./log/php:/opt/log/php #php log目录
         ##- ./dev.ini:/usr/local/etc/php/conf.d/safety.ini
       ports:
         - "9501:9501" #宿主端口（映射到）-》docker镜像端口
         - "9502:9502" #宿主端口（映射到）-》docker镜像端口
-      container_name: php56
       privileged: true #设定读写权限
       environment:
         - SW_WORKER_NUM=10
@@ -62,7 +60,7 @@ services:
     image: luwenbin8023/php:7.2.33-fpm-alpine3.12 #本地镜像
     volumes:
       - ../www:/data/www #站点根目录
-      ##- ./php:/opt/config #配置文件
+      #- /php72/php.ini:/usr/local/etc/php/php.ini:ro
       - ./log/php:/opt/log/php #php log目录
       ##- ./dev.ini:/usr/local/etc/php/conf.d/safety.ini
     ports:
@@ -76,9 +74,10 @@ services:
     image: luwenbin8023/php:7.4.12-fpm-alpine3.12 #本地镜像
     volumes:
       - ../www:/data/www #站点根目录
-      ##- ./php:/opt/config #配置文件
+      #- /php74/php.ini:/usr/local/etc/php/php.ini:ro
+      #- ./php:/opt/config #配置文件
       - ./log/php:/opt/log/php #php log目录
-      ##- ./dev.ini:/usr/local/etc/php/conf.d/safety.ini
+      #- ./dev.ini:/usr/local/etc/php/conf.d/safety.ini
     ports:
       - "9300:9000/tcp"
     container_name: php74
@@ -91,7 +90,7 @@ services:
     ports:
       - "3308:3306" #“宿主机端口:容器端口” 容器的3306端口映射到宿主机的3308端口
     volumes:
-      - ./mysql56:/var/lib/mysql #数据目录
+      - ./data/mysql56:/var/lib/mysql #数据目录
       - ./mysql56/my.cnf:/etc/mysql/my.cnf  #配置文件
     environment:
       MYSQL_ROOT_PASSWORD: 123456
@@ -103,7 +102,7 @@ services:
       ports:
         - "3307:3306" #“宿主机端口:容器端口” 容器的3306端口映射到宿主机的3308端口
       volumes:
-        - ./mysql57:/var/lib/mysql #数据目录
+        - ./data/mysql57:/var/lib/mysql #数据目录
         - ./mysql57/my.cnf:/etc/mysql/my.cnf  #配置文件
       environment:
         MYSQL_ROOT_PASSWORD: root123456
@@ -113,7 +112,7 @@ services:
       restart: always #设置自启动
       image: redis:6.0.9-alpine3.12 #本地镜像
       volumes:
-        - ./redis:/data #redis持久存储目录
+        - ./data/redis:/data/ #redis持久存储目录
         - ./redis/redis.conf:/usr/local/etc/redis/redis.conf #配置文件
       ports:
         - "6379:6379"
